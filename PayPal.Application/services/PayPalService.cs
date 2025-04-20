@@ -26,21 +26,21 @@ namespace PayPal.Application.Services
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var senderBatchId = string.IsNullOrEmpty(request.SenderBatchHeader.SenderBatchId)? "Payouts_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmmss"): request.SenderBatchHeader.SenderBatchId;
-                
-                request.SenderBatchHeader.SenderBatchId = senderBatchId;
+                request.SenderBatchHeader.SenderBatchId ??= $"Payouts_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
 
                 for (int i = 0; i < request.Items.Count; i++)
                 {
-                    if (string.IsNullOrEmpty(request.Items[i].SenderItemId))
-                    {
-                        request.Items[i].SenderItemId = $"{senderBatchId}_{i + 1}";
-                    }
+                    request.Items[i].SenderItemId ??= $"{request.SenderBatchHeader.SenderBatchId}_{i + 1}";
                 }
+
+                var url = "https://api.sandbox.paypal.com/v1/payments/payouts";
 
                 var jsonContent = JsonConvert.SerializeObject(request);
 
-                var response = await _httpClient.PostAsync("/v1/payments/payouts",new StringContent(jsonContent, Encoding.UTF8, "application/json"));
+                var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync(url, httpContent);
+
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -48,6 +48,9 @@ namespace PayPal.Application.Services
 
                     throw new HttpRequestException($"PayPal API error: {response.StatusCode} - {errorContent}");
                 }
+
+
+                response.EnsureSuccessStatusCode();
 
                 var responseContent = await response.Content.ReadAsStringAsync();
 

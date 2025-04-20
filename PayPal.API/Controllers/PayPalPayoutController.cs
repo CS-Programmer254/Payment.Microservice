@@ -22,10 +22,7 @@ namespace PayPal.API.Controllers
         {
             var result = await _payPalService.SendPayoutAsync(request);
 
-
-            var parsedResult = JsonConvert.DeserializeObject(result);
-
-            return Ok(parsedResult);
+            return Ok(result);
         }
     }
 }

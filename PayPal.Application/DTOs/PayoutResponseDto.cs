@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PayPal.Application.DTOs
+namespace PayPal.Application.DTOsr
 {
     public class PayoutResponseDto
     {
